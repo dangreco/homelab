@@ -7,26 +7,26 @@ locals {
         host     = host
         n        = i
         host_idx = local.wk_host_indices[host]
-        ip       = format("192.168.2.%d/24", 100 + (local.wk_host_indices[host] * 10) + i + 1)
+        ip       = format("192.168.2.%d/24", 100 + (local.wk_host_indices[host] * 10) + i + 2)
       }
     ]
   ])
 }
 
-# k8s workers
-resource "proxmox_virtual_environment_vm" "k8s-wk" {
+# k8s agents
+resource "proxmox_virtual_environment_vm" "k8s-agent" {
   for_each = { for i, v in local.wk_vm_instances : i => v }
 
-  name      = "k8s-wk-${each.key}"
+  name      = "k8s-agent-${each.key + 1}"
   node_name = each.value.host
-  vm_id     = 7000 + (each.value.host_idx * 100) + ((each.value.n + 1) * 10)
+  vm_id     = 7000 + (each.value.host_idx * 100) + each.value.n + 2
 
   cpu {
     cores = 2
   }
 
   memory {
-    dedicated = 4096
+    dedicated = 2048
   }
 
   agent {

@@ -1,32 +1,29 @@
 locals {
-  kp_host_indices = { for idx, host in var.pm_cluster_nodes : host => idx + 1 }
+  etcd_host_indices = { for idx, host in var.pm_cluster_nodes : host => idx + 1 }
 
-  kp_vm_instances = flatten([
-    for host in var.pm_cluster_nodes : [
-      for i in range(var.k8s_control_nodes) : {
-        host     = host
-        n        = i
-        host_idx = local.kp_host_indices[host]
-        ip       = format("192.168.2.%d/24", 100 + (local.kp_host_indices[host] * 10) + i)
-      }
-    ]
+  etcd_vm_instances = flatten([
+    for host in var.pm_cluster_nodes : {
+      host     = host
+      host_idx = local.etcd_host_indices[host]
+      ip       = format("192.168.2.%d/24", 100 + (local.etcd_host_indices[host] * 10))
+    }
   ])
 }
 
-# k8s control planes
-resource "proxmox_virtual_environment_vm" "k8s-kp" {
-  for_each = { for i, v in local.kp_vm_instances : i => v }
+# etcd
+resource "proxmox_virtual_environment_vm" "k8s-etcd" {
+  for_each = { for i, v in local.etcd_vm_instances : i => v }
 
-  name      = "k8s-kp-${each.key}"
+  name      = "k8s-etcd-${each.key + 1}"
   node_name = each.value.host
-  vm_id     = 7000 + (each.value.host_idx * 100) + each.value.n
+  vm_id     = 7000 + (each.value.host_idx * 100)
 
   cpu {
     cores = 2
   }
 
   memory {
-    dedicated = 4096
+    dedicated = 2048
   }
 
   agent {
