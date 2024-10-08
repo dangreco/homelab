@@ -1,0 +1,12 @@
+---
+- hosts: all
+  tasks:
+    - name: Set hostname
+      become: true
+      hostname:
+        name: "{{ inventory_hostname }}"
+    - name: "Retrieve hostname"
+      command: hostname
+      register: output
+    - name: "Print hostname"
+      debug: var=output.stdout_lines
