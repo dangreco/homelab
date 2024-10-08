@@ -1,0 +1,6 @@
+- hosts: k8s
+  become: true
+  tasks:
+    - fail:
+        msg: "OS should be Debian 12.7, not {{ ansible_distribution }} {{ ansible_distribution_version }}"
+      when: ansible_distribution != 'Debian' or ansible_distribution_version != '12.7'
