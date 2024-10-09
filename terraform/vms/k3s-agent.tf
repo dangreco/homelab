@@ -1,32 +1,34 @@
 locals {
-  kp_host_indices = { for idx, host in var.pm_cluster_nodes : host => idx + 1 }
+  wk_host_indices = { for idx, host in var.pm_cluster_nodes : host => idx + 1 }
 
-  kp_vm_instances = flatten([
+  wk_vm_instances = flatten([
     for host in var.pm_cluster_nodes : [
-      for i in range(var.k8s_control_nodes) : {
+      for i in range(var.k3s_agent_nodes) : {
         host     = host
         n        = i
-        host_idx = local.kp_host_indices[host]
-        ip       = format("192.168.2.%d/24", 100 + (local.kp_host_indices[host] * 10) + 1)
+        host_idx = local.wk_host_indices[host]
+        ip       = format("192.168.2.%d/24", 100 + (local.wk_host_indices[host] * 10) + i + 1)
       }
     ]
   ])
 }
 
-# k8s servers
-resource "proxmox_virtual_environment_vm" "k8s-server" {
-  for_each = { for i, v in local.kp_vm_instances : i => v }
+# k3s agents
+resource "proxmox_virtual_environment_vm" "k3s-agent" {
+  for_each = { for i, v in local.wk_vm_instances : i => v }
 
-  name      = "k8s-server-${each.key + 1}"
-  node_name = each.value.host
-  vm_id     = 7001 + (each.value.host_idx * 100)
+  name        = "k3s-agent-${each.key + 1}"
+  node_name   = each.value.host
+  vm_id       = 7000 + (each.value.host_idx * 10) + each.value.n + 1
+  description = "Managed by Terraform"
+  tags        = ["terraform", "debian"]
 
   cpu {
     cores = 2
   }
 
   memory {
-    dedicated = 4096
+    dedicated = 2048
   }
 
   agent {

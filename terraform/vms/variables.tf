@@ -4,14 +4,12 @@ variable "pm_cluster_nodes" {
   default     = []
 }
 
-variable "k8s_control_nodes" {
+variable "k3s_server_nodes" {
   type    = number
-  default = 1
 }
 
-variable "k8s_worker_nodes" {
+variable "k3s_agent_nodes" {
   type    = number
-  default = 1
 }
 
 variable "debian_12_cloud" {
